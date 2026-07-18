@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-parchment text-ink font-body;
+}
+
+::selection {
+  @apply bg-amber/30;
+}
+
+/* Visible keyboard focus for accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #C97A3D;
+  outline-offset: 2px;
+}
+
+/* Signature element: the dotted trail line connecting waypoints */
+.trail-line {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    currentColor 0,
+    currentColor 6px,
+    transparent 6px,
+    transparent 16px
+  );
+  width: 2px;
+}
+
+.topo-bg {
+  background-image: radial-gradient(circle at 1px 1px, rgba(47, 75, 60, 0.1) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
