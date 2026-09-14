@@ -112,9 +112,8 @@ const Register = () => {
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors ${
-                      i <= strength ? strengthColors[strength] : "bg-trail/10"
-                    }`}
+                    className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColors[strength] : "bg-trail/10"
+                      }`}
                   />
                 ))}
               </div>
