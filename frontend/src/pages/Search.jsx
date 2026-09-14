@@ -11,13 +11,18 @@ const Search = () => {
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState("");
+
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSearched(true);
+    setError("");
     try {
       const { data } = await api.get("/resources/search", { params: { q, type } });
       setResults(data);
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -56,8 +61,9 @@ const Search = () => {
       </form>
 
       {loading && <p className="text-ink/50">Searching…</p>}
+      {error && <p className="text-sm text-red-700 mb-4">{error}</p>}
 
-      {!loading && searched && results.length === 0 && (
+      {!loading && searched && results.length === 0 && !error && (
         <p className="text-ink/50">No resources matched your search.</p>
       )}
 

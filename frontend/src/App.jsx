@@ -6,8 +6,10 @@ import Home from "./pages/Home.jsx";
 import DomainPage from "./pages/DomainPage.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import VerifyOTP from "./pages/VerifyOTP.jsx";
 import AddResource from "./pages/AddResource.jsx";
 import Search from "./pages/Search.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 function App() {
   return (
@@ -20,6 +22,7 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route
             path="/add-resource"
             element={
@@ -28,6 +31,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />

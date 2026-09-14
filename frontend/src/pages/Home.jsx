@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios.js";
 import DomainCard from "../components/DomainCard.jsx";
 
@@ -12,7 +13,7 @@ const Home = () => {
       try {
         const { data } = await api.get("/domains");
         setDomains(data);
-      } catch (err) {
+      } catch {
         setError("Couldn't load domains. Is the backend running?");
       } finally {
         setLoading(false);
@@ -25,7 +26,7 @@ const Home = () => {
     <div>
       {/* Hero */}
       <section className="topo-bg border-b border-trail/10">
-        <div className="max-w-6xl mx-auto px-6 py-20 text-center">
+        <div className="max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-amber mb-4">
             Free resources · No more scattered tabs
           </p>
@@ -37,11 +38,25 @@ const Home = () => {
             roadmaps for DSA, Web Dev, AI/ML, and Cybersecurity — so you spend your time
             learning, not searching.
           </p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/register"
+              className="inline-block rounded-full bg-amber text-trail-dark px-6 py-2.5 font-medium hover:bg-amber/90 transition-colors"
+            >
+              Get started free
+            </Link>
+            <a
+              href="#domains"
+              className="inline-block rounded-full border border-trail/20 px-6 py-2.5 font-medium text-ink/70 hover:text-ink hover:border-trail/40 transition-colors"
+            >
+              Browse trails ↓
+            </a>
+          </div>
         </div>
       </section>
 
       {/* Domain grid */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
+      <section id="domains" className="max-w-6xl mx-auto px-6 py-16">
         <h2 className="font-display text-2xl text-ink mb-8">Choose your trail</h2>
 
         {loading && <p className="text-ink/50">Loading domains…</p>}

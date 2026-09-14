@@ -41,6 +41,15 @@ const AddResource = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    // Client-side URL validation
+    try {
+      new URL(form.url);
+    } catch {
+      setError("Please enter a valid URL (e.g. https://...)");
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post("/resources", {

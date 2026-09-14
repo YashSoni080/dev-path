@@ -4,100 +4,190 @@ A full-stack MERN application that organizes free learning resources (YouTube pl
 docs, sheets) into ordered roadmaps for DSA, Web Development, AI/ML, and Cybersecurity —
 so students stop wasting time hunting for the right tutorial.
 
-**Stack:** MongoDB · Express · React (Vite) · Node.js
-**Auth:** JWT (JSON Web Tokens) with bcrypt password hashing
+**Stack:** MongoDB · Express · React (Vite) · Node.js  
+**Auth:** JWT (httpOnly cookies) + bcrypt password hashing + OTP email verification  
 **Styling:** Tailwind CSS, custom "trail map" visual theme
 
 ---
 
-## 1. What this project does
+## Features
 
 - Browse curated **roadmaps** for 4 domains, each broken into ordered **topics** ("waypoints")
 - Each topic links to real, free **resources** (YouTube playlists, official docs, practice sheets)
-- **Sign up / log in** with JWT-based authentication
-- Logged-in users can **add new resources** to any topic (CRUD in action)
+- **Sign up / log in** with JWT httpOnly cookie authentication
+- **OTP email verification** on registration (6-digit code, 10-min expiry, rate limiting)
+- Logged-in users can **add new resources** to any topic
 - **Search** resources by keyword or type across all domains
-
-This gives you a project with: authentication, protected routes, relational MongoDB data
-(Domain → Topic → Resource), full CRUD, and a search feature — enough to demonstrate a real
-full-stack skillset without overengineering a 2-day build.
+- **Password strength indicator** and show/hide toggle on auth forms
+- **Mobile-responsive** navigation with hamburger menu
+- **404 page** for invalid routes
 
 ---
 
-## 2. Project structure
+## Security
+
+| Area | Implementation |
+|------|---------------|
+| Authentication | httpOnly cookies (not localStorage) — immune to XSS token theft |
+| Passwords | bcrypt salted hashing (10 rounds), 6–72 char validation |
+| OTP | Hashed before storage (bcrypt), 10-min TTL, max 5 attempts, 1-min resend cooldown |
+| NoSQL injection | `express-mongo-sanitize` strips `$`/`.` from user input |
+| Rate limiting | `express-rate-limit` — 50 req/15 min on auth, 300 req/15 min globally |
+| HTTP headers | `helmet` — sets security headers (CSP, X-Frame-Options, etc.) |
+| CORS | Whitelisted origin (`CLIENT_URL`), credentials enabled |
+| Error handling | Stack traces hidden in production (`NODE_ENV=production`) |
+
+---
+
+## Project structure
 
 ```
-devpath-mern/
+devpath/
 ├── backend/
-│   ├── config/db.js          # MongoDB connection
-│   ├── models/                # User, Domain, Topic, Resource (Mongoose schemas)
-│   ├── controllers/            # Route logic
-│   ├── routes/                 # Express routers
-│   ├── middleware/             # JWT auth guard + error handler
-│   ├── seed/seed.js            # Populates the DB with real, curated resources
-│   └── server.js                # App entry point
+│   ├── config/db.js              # MongoDB connection
+│   ├── controllers/              # Route logic
+│   │   ├── authController.js     # Register, login, OTP verify/resend, profile
+│   │   ├── domainController.js   # Domain listing, roadmap retrieval
+│   │   └── resourceController.js # Resource CRUD, search
+│   ├── middleware/
+│   │   ├── auth.js               # JWT guard (cookie + header support)
+│   │   ├── errorHandler.js       # Centralized error handler
+│   │   └── rateLimiter.js        # Auth & API rate limiters
+│   ├── models/
+│   │   ├── User.js               # User + OTP fields
+│   │   ├── Domain.js             # Domain (DSA, Web Dev, etc.)
+│   │   ├── Topic.js              # Waypoints within a domain
+│   │   └── Resource.js           # Learning resources
+│   ├── routes/
+│   │   ├── authRoutes.js         # /api/auth/*
+│   │   ├── domainRoutes.js       # /api/domains/*
+│   │   └── resourceRoutes.js     # /api/resources/*
+│   ├── seed/seed.js              # Populate DB with curated resources
+│   ├── utils/otp.js              # OTP generation, hashing, verification
+│   ├── .env.example
+│   └── server.js                 # Express app entry point
 └── frontend/
     ├── src/
-    │   ├── pages/               # Home, DomainPage, Login, Register, AddResource, Search
-    │   ├── components/          # Navbar, DomainCard, TrailWaypoint, ResourceIcon, etc.
-    │   ├── context/AuthContext.jsx
-    │   └── api/axios.js
-    └── index.html
+    │   ├── api/axios.js          # Axios instance (withCredentials)
+    │   ├── components/
+    │   │   ├── Navbar.jsx        # Responsive nav with mobile hamburger
+    │   │   ├── DomainCard.jsx
+    │   │   ├── TrailWaypoint.jsx
+    │   │   ├── ResourceIcon.jsx
+    │   │   ├── Footer.jsx
+    │   │   └── PrivateRoute.jsx  # Auth guard wrapper
+    │   ├── context/AuthContext.jsx # Auth state (cookie-based, server-hydrated)
+    │   ├── pages/
+    │   │   ├── Home.jsx          # Hero + domain grid
+    │   │   ├── DomainPage.jsx    # Roadmap trail view
+    │   │   ├── Login.jsx
+    │   │   ├── Register.jsx
+    │   │   ├── VerifyOTP.jsx     # 6-digit OTP input
+    │   │   ├── AddResource.jsx
+    │   │   ├── Search.jsx
+    │   │   └── NotFound.jsx      # 404 page
+    │   ├── App.jsx               # Router
+    │   └── main.jsx              # React root
+    └── tailwind.config.js
 ```
 
 ---
 
-## 3. Setup instructions
+## Setup instructions
 
 ### Prerequisites
-- Node.js (v18 or later) — check with `node -v`
-- A MongoDB database. Two options:
-  - **Easiest for a submission**: free cloud database at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) (no local install needed)
-  - **Local**: install MongoDB Community Server and run `mongod`
 
-### Step 1 — Backend setup
+- **Node.js** v18+ (`node -v`)
+- **MongoDB** — either local (`mongod`) or a cloud [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) cluster
+
+### 1 — Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env
+cp .env.example .env        # edit with your values
 ```
 
-Open `.env` and set:
+Edit `.env`:
+
 ```
-MONGO_URI=mongodb://127.0.0.1:27017/devpath   # or your Atlas connection string
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/devpath
 JWT_SECRET=any_long_random_string_here
+CLIENT_URL=http://localhost:5173
+NODE_ENV=development
 ```
 
-Seed the database with real, curated resources:
+Seed the database with curated resources:
+
 ```bash
 npm run seed
 ```
 
 Start the backend:
+
 ```bash
-npm run dev
+npm run dev                # nodemon auto-restarts on changes
 ```
-The API runs at `http://localhost:5000`. Visit `http://localhost:5000` in a browser —
-you should see `{"message":"DevPath API is running"}`.
 
-### Step 2 — Frontend setup
+The API is live at `http://localhost:5000`.
 
-Open a **new terminal**:
+### 2 — Frontend
+
 ```bash
 cd frontend
 npm install
-cp .env.example .env
+cp .env.example .env       # already defaults to localhost:5000
 npm run dev
 ```
+
 The app runs at `http://localhost:5173`.
 
-### Step 3 — Try it out
-1. Open `http://localhost:5173` — you should see 4 domain cards (DSA, Web Development, AI & ML, Cybersecurity)
+### 3 — Try it out
+
+1. Open `http://localhost:5173` — you'll see 4 domain cards
 2. Click a domain to see its roadmap trail with real resources
 3. Click **Sign up**, create an account
-4. Click **Add resource** to add your own resource to any topic
-5. Use **Search** to find resources by keyword
+4. A 6-digit OTP code is printed to the **backend terminal** (console.log — no SMTP needed)
+5. Enter the code on the verification page
+6. Log in and click **Add resource** to contribute your own
+7. Use **Search** to find resources across all domains
+
+---
+
+## API endpoints
+
+### Auth
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/auth/register` | — | Create account, triggers OTP |
+| POST | `/api/auth/verify-otp` | — | Verify 6-digit OTP |
+| POST | `/api/auth/resend-otp` | — | Resend OTP code |
+| POST | `/api/auth/login` | — | Log in (requires verified email) |
+| POST | `/api/auth/logout` | — | Clear auth cookie |
+| GET | `/api/auth/me` | ✓ | Get current user profile |
+
+### Domains & Resources
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/domains` | — | List all domains |
+| GET | `/api/domains/:slug` | — | Domain with full roadmap |
+| POST | `/api/resources` | ✓ | Add a resource to a topic |
+| GET | `/api/resources/search?q=&type=` | — | Search resources |
+| DELETE | `/api/resources/:id` | ✓ | Delete own resource |
+
+---
+
+## How OTP works
+
+1. **Register** → server generates a 6-digit code, hashes it with bcrypt, stores it on the user document with a 10-min TTL
+2. **Code delivery** → in development, the OTP is printed to the server console (in production, plug in Nodemailer or any SMTP provider in `utils/otp.js`)
+3. **Verify** → user enters the 6 digits; server compares against the hash, sets `isVerified = true`, and issues a session cookie
+4. **Resend** → rate-limited to once per minute; previous code is replaced
+5. **Brute-force protection** → max 5 wrong attempts per code before a resend is required
+6. **Login blocked** → unverified users see "Please verify your email first" and are redirected to the OTP page
 
 ---
 
