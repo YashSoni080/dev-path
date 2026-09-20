@@ -153,22 +153,27 @@ const VerifyOTP = () => {
           </p>
         </div>
 
-        {/* Development Helper Pill */}
+        {/* Development & Temp-Mail Sandbox Helper */}
         {debugOtp && (
-          <div className="mb-5 p-3 rounded-2xl bg-amber/10 border border-amber/30 text-ink text-xs flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-amber shrink-0" />
-              <span>
-                Dev Code: <strong className="font-mono text-sm tracking-wider">{debugOtp}</strong>
-              </span>
+          <div className="mb-5 p-3.5 rounded-2xl bg-amber/10 border border-amber/30 text-ink text-xs space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 font-medium">
+                <Sparkles className="w-4 h-4 text-amber shrink-0" />
+                <span>
+                  Code: <strong className="font-mono text-sm tracking-wider text-amber-900">{debugOtp}</strong>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleFillDebugCode}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber text-trail-dark hover:bg-amber/90 transition-colors shadow-xs shrink-0"
+              >
+                Auto-fill & verify
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleFillDebugCode}
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber text-trail-dark hover:bg-amber/90 transition-colors shadow-xs shrink-0"
-            >
-              Auto-fill & verify
-            </button>
+            <p className="text-[11px] text-ink/60 leading-tight">
+              ⚡ Using a temporary mail or test domain? Code is provided above for instant 1-click verification.
+            </p>
           </div>
         )}
 

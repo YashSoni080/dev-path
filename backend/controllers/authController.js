@@ -62,13 +62,26 @@ export const registerUser = async (req, res, next) => {
       },
     });
 
-    await sendOtpEmail(user.email, otp);
+    const delivery = await sendOtpEmail(user.email, otp);
+
+    const isSandboxFallback =
+      delivery.deliveryMethod === "sandbox_fallback" ||
+      delivery.deliveryMethod === "console" ||
+      !delivery.success ||
+      process.env.NODE_ENV !== "production";
 
     res.status(201).json({
-      message: "Account created. Enter the 6-digit code sent to your email to verify.",
+      message: delivery.success
+        ? "Account created! A 6-digit verification code has been sent to your email."
+        : "Account created! Enter the 6-digit code to verify your email.",
       email: user.email,
       requiresOtp: true,
-      debugOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
+      debugOtp: isSandboxFallback ? otp : undefined,
+      deliveryStatus: delivery.deliveryMethod,
+      tempMailNotice:
+        delivery.deliveryMethod === "sandbox_fallback"
+          ? "Resend test sandbox restriction: verification code provided for instant temp-mail testing."
+          : undefined,
     });
   } catch (error) {
     next(error);
@@ -170,11 +183,24 @@ export const resendOtp = async (req, res, next) => {
     };
     await user.save();
 
-    await sendOtpEmail(user.email, otp);
+    const delivery = await sendOtpEmail(user.email, otp);
+
+    const isSandboxFallback =
+      delivery.deliveryMethod === "sandbox_fallback" ||
+      delivery.deliveryMethod === "console" ||
+      !delivery.success ||
+      process.env.NODE_ENV !== "production";
 
     res.json({
-      message: "A new code has been sent to your email.",
-      debugOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
+      message: delivery.success
+        ? "A new verification code has been sent to your email."
+        : "A new verification code has been generated.",
+      debugOtp: isSandboxFallback ? otp : undefined,
+      deliveryStatus: delivery.deliveryMethod,
+      tempMailNotice:
+        delivery.deliveryMethod === "sandbox_fallback"
+          ? "Resend test sandbox restriction: verification code provided for instant temp-mail testing."
+          : undefined,
     });
   } catch (error) {
     next(error);
