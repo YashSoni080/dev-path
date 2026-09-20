@@ -58,3 +58,59 @@ export const getDomainBySlug = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc   Get complete platform data (all domains with master courses, topics, and resources)
+// @route  GET /api/all or /api/domains/all/data
+export const getAllData = async (req, res, next) => {
+  try {
+    const domains = await Domain.find().sort({ name: 1 });
+
+    // 1. All master courses & sheets
+    const masterResources = await Resource.find({ isMasterCourse: true })
+      .populate("addedBy", "name email")
+      .sort({ createdAt: 1 });
+
+    // 2. All topics across all domains
+    const topics = await Topic.find().sort({ order: 1 });
+
+    // 3. All waypoint resources
+    const topicResources = await Resource.find({ isMasterCourse: false })
+      .populate("addedBy", "name email")
+      .sort({ createdAt: 1 });
+
+    const completeDomains = domains.map((domain) => {
+      const domainMasters = masterResources.filter(
+        (r) => r.domain && r.domain.toString() === domain._id.toString()
+      );
+
+      const domainTopics = topics
+        .filter((t) => t.domain && t.domain.toString() === domain._id.toString())
+        .map((t) => ({
+          ...t.toObject(),
+          resources: topicResources.filter(
+            (r) => r.topic && r.topic.toString() === t._id.toString()
+          ),
+        }));
+
+      return {
+        ...domain.toObject(),
+        masterResources: domainMasters,
+        topics: domainTopics,
+      };
+    });
+
+    res.json({
+      success: true,
+      summary: {
+        totalDomains: domains.length,
+        totalMasterCourses: masterResources.length,
+        totalTopics: topics.length,
+        totalResources: masterResources.length + topicResources.length,
+      },
+      domains: completeDomains,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

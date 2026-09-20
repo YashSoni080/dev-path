@@ -12,6 +12,7 @@ import authRoutes from "./routes/authRoutes.js";
 import domainRoutes from "./routes/domainRoutes.js";
 import resourceRoutes from "./routes/resourceRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
+import { getAllData } from "./controllers/domainController.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.get("/", (req, res) => {
   res.json({ message: "DevPath API is running" });
 });
 
+app.get("/api/all", getAllData);
 app.use("/api/auth", authRoutes);
 app.use("/api/domains", domainRoutes);
 app.use("/api/resources", resourceRoutes);
