@@ -249,4 +249,27 @@ Resource    { topic (ref), title, url, type, description, addedBy (ref User) }
 
 ---
 
-Built as a MERN full-stack college submission project.
+## Deploy to Vercel
+
+DevPath includes native Vercel support (`vercel.json` and `api/index.js` serverless bridge) allowing full-stack deployment directly from your GitHub repository:
+
+### 1. Import Repository
+1. Go to [Vercel Dashboard](https://vercel.com/new) and click **"Add New"** → **"Project"**.
+2. Select your `dev-path` GitHub repository.
+3. Leave **Root Directory** as `./` (or leave default).
+
+### 2. Configure Environment Variables
+In the Vercel project configuration, add:
+- `MONGO_URI`: Your MongoDB connection string (e.g. from [MongoDB Atlas](https://www.mongodb.com/atlas/database) free tier: `mongodb+srv://<user>:<password>@cluster0.mongodb.net/devpath?retryWrites=true&w=majority`).
+- `JWT_SECRET`: A strong random string for signing auth tokens.
+- `NODE_ENV`: `production`
+
+### 3. Deploy
+Click **"Deploy"**. Vercel will:
+- Build the Vite React frontend into `frontend/dist`
+- Mount `/api/*` to the Express serverless function via `api/index.js`
+- Route all SPA client paths (`/trails/*`, `/profile`, `/login`) to `index.html` without 404s
+
+---
+
+Built as a modern MERN full-stack learning platform.
