@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
       attempts: { type: Number, default: 0 },
       lastSentAt: { type: Date, default: null },
     },
+    completedTopics: [{ type: mongoose.Schema.Types.ObjectId, ref: "Topic" }],
   },
   { timestamps: true }
 );
@@ -44,6 +45,7 @@ userSchema.methods.toSafeJSON = function () {
     name: this.name,
     email: this.email,
     isVerified: this.isVerified,
+    completedTopics: this.completedTopics || [],
   };
 };
 

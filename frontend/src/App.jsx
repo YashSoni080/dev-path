@@ -9,11 +9,12 @@ import Register from "./pages/Register.jsx";
 import VerifyOTP from "./pages/VerifyOTP.jsx";
 import AddResource from "./pages/AddResource.jsx";
 import Search from "./pages/Search.jsx";
+import Profile from "./pages/Profile.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-parchment text-ink selection:bg-amber/30">
       <Navbar />
       <main className="flex-1">
         <Routes>
@@ -28,6 +29,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AddResource />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
               </PrivateRoute>
             }
           />

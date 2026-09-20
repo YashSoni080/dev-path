@@ -7,14 +7,10 @@ html {
 }
 
 body {
-  @apply bg-parchment text-ink font-body;
+  @apply bg-parchment text-ink font-body antialiased selection:bg-amber/30 selection:text-ink;
 }
 
-::selection {
-  @apply bg-amber/30;
-}
-
-/* Visible keyboard focus for accessibility */
+/* Accessible focus styling */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -24,7 +20,7 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-/* Signature element: the dotted trail line connecting waypoints */
+/* Dotted trail line connecting waypoints */
 .trail-line {
   background-image: repeating-linear-gradient(
     to bottom,
@@ -33,12 +29,71 @@ select:focus-visible {
     transparent 6px,
     transparent 16px
   );
-  width: 2px;
 }
 
 .topo-bg {
-  background-image: radial-gradient(circle at 1px 1px, rgba(47, 75, 60, 0.1) 1px, transparent 0);
-  background-size: 18px 18px;
+  background-image: radial-gradient(circle at 1px 1px, rgba(47, 75, 60, 0.08) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(47, 75, 60, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(47, 75, 60, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {

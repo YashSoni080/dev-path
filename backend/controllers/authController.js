@@ -66,6 +66,7 @@ export const registerUser = async (req, res, next) => {
       message: "Account created. Enter the 6-digit code sent to your email to verify.",
       email: user.email,
       requiresOtp: true,
+      debugOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
     });
   } catch (error) {
     next(error);
@@ -169,7 +170,10 @@ export const resendOtp = async (req, res, next) => {
 
     await sendOtpEmail(user.email, otp);
 
-    res.json({ message: "A new code has been sent to your email." });
+    res.json({
+      message: "A new code has been sent to your email.",
+      debugOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
+    });
   } catch (error) {
     next(error);
   }

@@ -1,144 +1,229 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useToast } from "../context/ToastContext.jsx";
+import { UserPlus, Eye, EyeOff, Mail, Lock, User, Check, ArrowRight } from "lucide-react";
 
 const Register = () => {
   const { register } = useAuth();
+  const { success, error: toastError } = useToast();
   const navigate = useNavigate();
+
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  // Simple password strength indicator
-  const getStrength = (pw) => {
-    let score = 0;
-    if (pw.length >= 6) score++;
-    if (pw.length >= 10) score++;
-    if (/[A-Z]/.test(pw)) score++;
-    if (/[0-9]/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-    return score;
+  // Password rules validation
+  const rules = {
+    length: form.password.length >= 6,
+    hasNumber: /[0-9]/.test(form.password),
+    hasUpper: /[A-Z]/.test(form.password),
+    hasSpecial: /[^A-Za-z0-9]/.test(form.password),
   };
 
-  const strength = getStrength(form.password);
-  const strengthLabels = ["", "Weak", "Fair", "Good", "Strong", "Very strong"];
-  const strengthColors = ["", "bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-green-500", "bg-emerald-500"];
+  const strengthScore = Object.values(rules).filter(Boolean).length;
+  const strengthLabels = ["Weak", "Fair", "Good", "Strong"];
+  const strengthColors = ["bg-rose-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await register(form.name, form.email, form.password);
-      // Account created — redirect to OTP verification
+      success("Account created! Check your verification code.");
+
       if (data.requiresOtp) {
-        navigate("/verify-otp", { state: { email: form.email } });
+        navigate("/verify-otp", {
+          state: { email: form.email, debugOtp: data.debugOtp },
+        });
+      } else {
+        navigate("/login");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      const msg = err.response?.data?.message || "Registration failed.";
+      setError(msg);
+      toastError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto px-6 py-20">
-      <h1 className="font-display text-3xl text-ink mb-2">Join DevPath</h1>
-      <p className="text-ink/60 mb-8">Create an account to contribute resources to the trail.</p>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-ink/80 mb-1">Name</label>
-          <input
-            type="text"
-            name="name"
-            required
-            maxLength={50}
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Your name"
-            className="w-full rounded-lg border border-trail/20 bg-white/70 px-3 py-2 focus:outline-none focus:border-amber"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-ink/80 mb-1">Email</label>
-          <input
-            type="email"
-            name="email"
-            required
-            value={form.email}
-            onChange={handleChange}
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-trail/20 bg-white/70 px-3 py-2 focus:outline-none focus:border-amber"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-ink/80 mb-1">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={handleChange}
-              placeholder="At least 6 characters"
-              className="w-full rounded-lg border border-trail/20 bg-white/70 px-3 py-2 pr-10 focus:outline-none focus:border-amber"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink/70 transition-colors"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              )}
-            </button>
+    <div className="max-w-md mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <div className="rounded-3xl border border-trail/15 bg-white/90 backdrop-blur-md p-6 sm:p-8 shadow-sm">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-amber text-trail-dark flex items-center justify-center mx-auto mb-3 shadow-md">
+            <UserPlus className="w-6 h-6" />
           </div>
-          {form.password.length > 0 && (
-            <div className="mt-2">
-              <div className="flex gap-1 mb-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColors[strength] : "bg-trail/10"
-                      }`}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-ink/40">{strengthLabels[strength]}</p>
-            </div>
-          )}
+          <h1 className="font-display font-bold text-2xl sm:text-3xl text-ink">
+            Join the Trail
+          </h1>
+          <p className="text-xs sm:text-sm text-ink/60 mt-1">
+            Track your roadmap progress and discover curated free resources.
+          </p>
         </div>
 
-        {error && <p className="text-sm text-red-700">{error}</p>}
+        {error && (
+          <div className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+            {error}
+          </div>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-full bg-trail text-parchment py-2.5 font-medium hover:bg-trail-dark transition-colors disabled:opacity-50"
-        >
-          {loading ? "Creating account…" : "Create account"}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-xs font-mono uppercase tracking-wider text-ink/70 font-semibold mb-1.5"
+            >
+              Full Name
+            </label>
+            <div className="relative flex items-center">
+              <User className="w-4 h-4 text-ink/40 absolute left-3.5 pointer-events-none" />
+              <input
+                id="name"
+                type="text"
+                name="name"
+                required
+                maxLength={50}
+                autoComplete="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Ada Lovelace"
+                className="w-full rounded-xl border border-trail/20 bg-white pl-10 pr-3.5 py-2.5 text-sm text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20"
+              />
+            </div>
+          </div>
 
-      <p className="mt-6 text-sm text-ink/60">
-        Already have an account?{" "}
-        <Link to="/login" className="text-amber font-medium">
-          Log in
-        </Link>
-      </p>
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-xs font-mono uppercase tracking-wider text-ink/70 font-semibold mb-1.5"
+            >
+              Email Address
+            </label>
+            <div className="relative flex items-center">
+              <Mail className="w-4 h-4 text-ink/40 absolute left-3.5 pointer-events-none" />
+              <input
+                id="email"
+                type="email"
+                name="email"
+                required
+                autoComplete="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="ada@example.com"
+                className="w-full rounded-xl border border-trail/20 bg-white pl-10 pr-3.5 py-2.5 text-sm text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-mono uppercase tracking-wider text-ink/70 font-semibold mb-1.5"
+            >
+              Password
+            </label>
+            <div className="relative flex items-center">
+              <Lock className="w-4 h-4 text-ink/40 absolute left-3.5 pointer-events-none" />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                required
+                minLength={6}
+                autoComplete="new-password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="At least 6 characters"
+                className="w-full rounded-xl border border-trail/20 bg-white pl-10 pr-10 py-2.5 text-sm text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 text-ink/40 hover:text-ink/70 transition-colors p-1"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+
+            {/* Password strength meter */}
+            {form.password.length > 0 && (
+              <div className="mt-2.5 p-3 rounded-xl bg-parchment/60 border border-trail/10 text-xs space-y-1.5">
+                <div className="flex gap-1 mb-2">
+                  {[1, 2, 3, 4].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        level <= strengthScore
+                          ? strengthColors[strengthScore - 1] || "bg-rose-500"
+                          : "bg-gray-200"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-1 text-[11px] text-ink/60">
+                  <span className={`flex items-center gap-1 ${rules.length ? "text-emerald-700 font-medium" : ""}`}>
+                    <Check className={`w-3 h-3 ${rules.length ? "opacity-100" : "opacity-30"}`} />
+                    6+ characters
+                  </span>
+                  <span className={`flex items-center gap-1 ${rules.hasNumber ? "text-emerald-700 font-medium" : ""}`}>
+                    <Check className={`w-3 h-3 ${rules.hasNumber ? "opacity-100" : "opacity-30"}`} />
+                    1+ number
+                  </span>
+                  <span className={`flex items-center gap-1 ${rules.hasUpper ? "text-emerald-700 font-medium" : ""}`}>
+                    <Check className={`w-3 h-3 ${rules.hasUpper ? "opacity-100" : "opacity-30"}`} />
+                    Uppercase letter
+                  </span>
+                  <span className={`flex items-center gap-1 ${rules.hasSpecial ? "text-emerald-700 font-medium" : ""}`}>
+                    <Check className={`w-3 h-3 ${rules.hasSpecial ? "opacity-100" : "opacity-30"}`} />
+                    Special character
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 rounded-full bg-amber text-trail-dark py-3 font-semibold text-sm hover:bg-amber/90 transition-all shadow-md shadow-amber/20 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <span>Creating Account…</span>
+            ) : (
+              <>
+                <span>Create Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </form>
+
+        <div className="mt-6 pt-5 border-t border-trail/10 text-center text-xs text-ink/60">
+          <span>Already registered? </span>
+          <Link to="/login" className="text-amber font-semibold hover:underline">
+            Log in here
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

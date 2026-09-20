@@ -11,6 +11,7 @@ import { apiLimiter } from "./middleware/rateLimiter.js";
 import authRoutes from "./routes/authRoutes.js";
 import domainRoutes from "./routes/domainRoutes.js";
 import resourceRoutes from "./routes/resourceRoutes.js";
+import progressRoutes from "./routes/progressRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -44,10 +45,21 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/domains", domainRoutes);
 app.use("/api/resources", resourceRoutes);
+app.use("/api/progress", progressRoutes);
 
 // ── Error handling ─────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n❌ Port ${PORT} is already in use by another running process.`);
+    console.error(`To release the port, run: fuser -k ${PORT}/tcp (or npx kill-port ${PORT})\n`);
+    process.exit(1);
+  } else {
+    console.error("Server error:", err);
+  }
+});

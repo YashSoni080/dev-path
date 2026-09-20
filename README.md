@@ -12,15 +12,16 @@ so students stop wasting time hunting for the right tutorial.
 
 ## Features
 
-- Browse curated **roadmaps** for 4 domains, each broken into ordered **topics** ("waypoints")
-- Each topic links to real, free **resources** (YouTube playlists, official docs, practice sheets)
-- **Sign up / log in** with JWT httpOnly cookie authentication
-- **OTP email verification** on registration (6-digit code, 10-min expiry, rate limiting)
-- Logged-in users can **add new resources** to any topic
-- **Search** resources by keyword or type across all domains
-- **Password strength indicator** and show/hide toggle on auth forms
-- **Mobile-responsive** navigation with hamburger menu
-- **404 page** for invalid routes
+- **Curated Roadmaps**: 4 domains (DSA, Web Dev, AI/ML, Cybersecurity) broken into ordered **waypoints**
+- **Interactive Progress Tracking**: Check off completed waypoints with real-time animated percentage bars (saved to DB for users, `localStorage` for guests)
+- **User Dashboard (`/profile`)**: Overview of learning milestones, completed topics by domain, and personal contributed resources
+- **Live Search & Multi-Filtering**: Instant debounced search with case-insensitive substring matching, domain filtering, and format filtering
+- **Resource Management**: Delete and manage personal contributions directly from roadmaps and search results
+- **Contributor Attribution**: Clear badges identifying curated official resources vs community contributions
+- **Quick Add from Waypoint**: "+ Add" buttons directly on roadmap waypoints that auto-fill the target domain and topic
+- **JWT & OTP Auth**: httpOnly cookie authentication with 6-digit OTP verification (with dev auto-fill helper in development mode)
+- **Design System & Toasts**: Built with Lucide SVG iconography, accessible form controls, floating toast notifications, and responsive mobile navigation drawer
+- **404 Page**: Custom illustrated error page with base camp navigation
 
 ---
 
@@ -93,6 +94,26 @@ devpath/
 
 ---
 
+## Quickstart (Single Command)
+
+From the main root directory:
+
+```bash
+# Install dependencies for both root, backend, and frontend
+npm run install:all
+
+# Seed database (if running for the first time)
+npm run seed
+
+# Run both backend & frontend concurrently
+npm run dev
+```
+
+- **Frontend**: `http://localhost:5173`
+- **Backend API**: `http://localhost:5000`
+
+---
+
 ## Setup instructions
 
 ### Prerequisites
@@ -100,48 +121,39 @@ devpath/
 - **Node.js** v18+ (`node -v`)
 - **MongoDB** — either local (`mongod`) or a cloud [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) cluster
 
-### 1 — Backend
+### Environment Setup
 
-```bash
-cd backend
-npm install
-cp .env.example .env        # edit with your values
-```
+1. **Backend** `.env` in `backend/.env`:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+   ```env
+   PORT=5000
+   MONGO_URI=mongodb://127.0.0.1:27017/devpath
+   JWT_SECRET=any_long_random_string_here
+   CLIENT_URL=http://localhost:5173
+   NODE_ENV=development
+   ```
 
-Edit `.env`:
+2. **Frontend** `.env` in `frontend/.env`:
+   ```bash
+   cp frontend/.env.example frontend/.env
+   ```
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   ```
 
-```
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/devpath
-JWT_SECRET=any_long_random_string_here
-CLIENT_URL=http://localhost:5173
-NODE_ENV=development
-```
+### Running the App
 
-Seed the database with curated resources:
-
-```bash
-npm run seed
-```
-
-Start the backend:
-
-```bash
-npm run dev                # nodemon auto-restarts on changes
-```
-
-The API is live at `http://localhost:5000`.
-
-### 2 — Frontend
-
-```bash
-cd frontend
-npm install
-cp .env.example .env       # already defaults to localhost:5000
-npm run dev
-```
-
-The app runs at `http://localhost:5173`.
+- **Both together (Recommended)**:
+  ```bash
+  npm run dev
+  ```
+- **Separately (Optional)**:
+  ```bash
+  npm run dev:backend   # or cd backend && npm run dev
+  npm run dev:frontend  # or cd frontend && npm run dev
+  ```
 
 ### 3 — Try it out
 

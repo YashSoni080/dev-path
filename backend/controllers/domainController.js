@@ -13,7 +13,7 @@ export const getDomains = async (req, res, next) => {
   }
 };
 
-// @desc   Get a single domain with its full roadmap (topics + resources)
+// @desc   Get a single domain with its master courses and roadmap topics
 // @route  GET /api/domains/:slug
 export const getDomainBySlug = async (req, res, next) => {
   try {
@@ -22,16 +22,38 @@ export const getDomainBySlug = async (req, res, next) => {
       return res.status(404).json({ message: "Domain not found" });
     }
 
+    // 1. Fetch complete A-to-Z master courses & sheets for this domain
+    const masterResources = await Resource.find({
+      domain: domain._id,
+      isMasterCourse: true,
+    })
+      .populate("addedBy", "name email")
+      .sort({ createdAt: 1 });
+
+    // 2. Fetch step-by-step waypoint topics
     const topics = await Topic.find({ domain: domain._id }).sort({ order: 1 });
     const topicIds = topics.map((t) => t._id);
-    const resources = await Resource.find({ topic: { $in: topicIds } }).sort({ createdAt: 1 });
+
+    // 3. Fetch topic-specific resources (excluding master courses)
+    const resources = await Resource.find({
+      topic: { $in: topicIds },
+      isMasterCourse: false,
+    })
+      .populate("addedBy", "name email")
+      .sort({ createdAt: 1 });
 
     const resourcesByTopic = topics.map((topic) => ({
       ...topic.toObject(),
-      resources: resources.filter((r) => r.topic.toString() === topic._id.toString()),
+      resources: resources.filter(
+        (r) => r.topic && r.topic.toString() === topic._id.toString()
+      ),
     }));
 
-    res.json({ domain, topics: resourcesByTopic });
+    res.json({
+      domain,
+      masterResources: masterResources || [],
+      topics: resourcesByTopic,
+    });
   } catch (error) {
     next(error);
   }
