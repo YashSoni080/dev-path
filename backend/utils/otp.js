@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 
 export const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 export const OTP_MAX_ATTEMPTS = 5;
@@ -23,11 +24,15 @@ export const verifyOtp = async (otp, hashedOtp) => {
 };
 
 /**
- * Send the OTP to the user via Resend transactional email API.
- * If running in Resend sandbox mode or using an unverified temp-mail address,
- * it returns a graceful fallback so verification is never blocked.
+ * Send the OTP to the user.
+ * Supports:
+ *  1) SMTP / Gmail (delivers to ANY email, including temp-mails like hideam.com)
+ *  2) Resend API (delivers to owner email or all emails once domain is verified)
+ *  3) Sandbox fallback (provides code on screen when sandbox blocks delivery)
  */
 export const sendOtpEmail = async (email, otp) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.RESEND_FROM || "DevPath <onboarding@resend.dev>";
 
@@ -103,6 +108,32 @@ export const sendOtpEmail = async (email, otp) => {
     </html>
   `;
 
+  // 1. If SMTP / Gmail credentials exist, deliver via Nodemailer (works for ALL temp mails!)
+  if (emailUser && emailPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: emailUser,
+          pass: emailPass,
+        },
+      });
+
+      const info = await transporter.sendMail({
+        from: `"DevPath" <${emailUser}>`,
+        to: email,
+        subject: `Your DevPath Verification Code: ${otp}`,
+        html: htmlContent,
+      });
+
+      console.log(`[SMTP] Successfully delivered OTP to ${email} (ID: ${info.messageId})`);
+      return { success: true, deliveryMethod: "smtp", id: info.messageId };
+    } catch (smtpErr) {
+      console.error(`[SMTP Error] Failed to send via Gmail SMTP:`, smtpErr.message);
+    }
+  }
+
+  // 2. Otherwise use Resend transactional email API
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
