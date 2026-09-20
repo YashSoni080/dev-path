@@ -29,6 +29,13 @@ const VerifyOTP = () => {
     }
   }, [email, navigate]);
 
+  // Auto-populate digits if code is provided via temp-mail/test fallback
+  useEffect(() => {
+    if (debugOtp && debugOtp.length === 6) {
+      setDigits(debugOtp.split(""));
+    }
+  }, [debugOtp]);
+
   // Cooldown countdown
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -155,7 +162,7 @@ const VerifyOTP = () => {
 
         {/* Development & Temp-Mail Sandbox Helper */}
         {debugOtp && (
-          <div className="mb-5 p-3.5 rounded-2xl bg-amber/10 border border-amber/30 text-ink text-xs space-y-2">
+          <div className="mb-5 p-3.5 rounded-2xl bg-amber/15 border border-amber/40 text-ink text-xs space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 font-medium">
                 <Sparkles className="w-4 h-4 text-amber shrink-0" />
@@ -171,8 +178,8 @@ const VerifyOTP = () => {
                 Auto-fill & verify
               </button>
             </div>
-            <p className="text-[11px] text-ink/60 leading-tight">
-              ⚡ Using a temporary mail or test domain? Code is provided above for instant 1-click verification.
+            <p className="text-[11px] text-ink/70 leading-tight">
+              ℹ️ Resend test mode restricts real inbox delivery to owner. Your code has been auto-filled above for instant 1-click verification!
             </p>
           </div>
         )}
