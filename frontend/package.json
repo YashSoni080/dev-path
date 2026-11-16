@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && cp dist/index.html dist/404.html",
+    "cap:sync": "cap sync",
+    "cap:open": "cap open android",
+    "build:android": "npm run build && cap sync",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "axios": "^1.7.2",
     "lucide-react": "^1.47.0",
     "react": "^18.3.1",
